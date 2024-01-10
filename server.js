@@ -8,7 +8,7 @@ const apiRoutes = require("./routes/api")
 app.use(express.json())
 
 app.get("/", (req, res) => {
-  res.send("備忘錄 API 正在運行")
+  res.send("API 正在運行")
 })
 
 app.use("/api", apiRoutes)
