@@ -149,7 +149,27 @@ apisController.getAllCategories = async (req, res) => {
 
 // 添加新的食物類別
 apisController.addCategory = async (req, res) => {
-  // TODO: 實現添加食物類別邏輯
+  try {
+    // 從請求體中獲取類別資訊
+    const { categoryName, isDefault } = req.body
+
+    // 驗證類別資訊（這裡只是一個基本的示例）
+    if (!categoryName) {
+      return res.status(400).json({ message: "類別名稱是必須的。" })
+    }
+
+    // 在數據庫中創建新的食物類別
+    const newCategory = await models.FoodCategory.create({
+      categoryName,
+      isDefault: isDefault || false, // 如果未提供，則默認為 false
+    })
+
+    // 返回成功響應
+    return res.status(201).json(newCategory)
+  } catch (error) {
+    // 處理錯誤
+    return res.status(500).json({ error: error.message })
+  }
 }
 
 // 獲取用戶黑名單
