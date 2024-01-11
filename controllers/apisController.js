@@ -24,7 +24,15 @@ apisController.updateUserInfo = async (req, res) => {
 
 // 獲取所有食物類別
 apisController.getAllCategories = async (req, res) => {
-  // TODO: 實現獲取所有食物類別邏輯
+  try {
+    // 從資料庫中查詢所有食物類別
+    const categories = await models.FoodCategory.findAll()
+    // 返回查詢結果
+    res.status(200).json(categories)
+  } catch (error) {
+    // 處理可能的錯誤
+    res.status(500).json({ error: error.message })
+  }
 }
 
 // 添加新的食物類別
