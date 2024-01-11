@@ -39,7 +39,8 @@ apisController.registerUser = async (req, res) => {
     })
   } catch (error) {
     // 處理錯誤
-    return res.status(500).json({ error: error.message })
+    console.log({ error: error.message })
+    return res.status(500).json({ error: "發生未知錯誤" })
   }
 }
 
@@ -70,7 +71,8 @@ apisController.loginUser = async (req, res) => {
     res.status(200).json({ message: "登錄成功", userId: user.userId })
   } catch (error) {
     // 處理錯誤
-    res.status(500).json({ error: error.message })
+    console.log({ error: error.message })
+    return res.status(500).json({ error: "發生未知錯誤" })
   }
 }
 
@@ -95,7 +97,8 @@ apisController.getUserInfo = async (req, res) => {
     })
   } catch (error) {
     // 處理錯誤
-    return res.status(500).json({ error: error.message })
+    console.log({ error: error.message })
+    return res.status(500).json({ error: "發生未知錯誤" })
   }
 }
 
@@ -130,7 +133,8 @@ apisController.updateUserInfo = async (req, res) => {
     return res.status(200).json({ message: "用戶資訊已更新。" })
   } catch (error) {
     // 處理錯誤
-    return res.status(500).json({ error: error.message })
+    console.log({ error: error.message })
+    return res.status(500).json({ error: "發生未知錯誤" })
   }
 }
 
@@ -142,8 +146,9 @@ apisController.getAllCategories = async (req, res) => {
     // 返回查詢結果
     res.status(200).json(categories)
   } catch (error) {
-    // 處理可能的錯誤
-    res.status(500).json({ error: error.message })
+    // 處理錯誤
+    console.log({ error: error.message })
+    return res.status(500).json({ error: "發生未知錯誤" })
   }
 }
 
@@ -168,7 +173,8 @@ apisController.addCategory = async (req, res) => {
     return res.status(201).json(newCategory)
   } catch (error) {
     // 處理錯誤
-    return res.status(500).json({ error: error.message })
+    console.log({ error: error.message })
+    return res.status(500).json({ error: "發生未知錯誤" })
   }
 }
 
@@ -196,7 +202,8 @@ apisController.getUserBlacklist = async (req, res) => {
     return res.status(200).json(userBlacklist)
   } catch (error) {
     // 處理錯誤
-    return res.status(500).json({ error: error.message })
+    console.log({ error: error.message })
+    return res.status(500).json({ error: "發生未知錯誤" })
   }
 }
 
@@ -224,7 +231,8 @@ apisController.addToBlacklist = async (req, res) => {
     return res.status(201).json(newBlacklistEntry)
   } catch (error) {
     // 處理錯誤
-    return res.status(500).json({ error: error.message })
+    console.log({ error: error.message })
+    return res.status(500).json({ error: "發生未知錯誤" })
   }
 }
 
@@ -252,7 +260,8 @@ apisController.removeFromBlacklist = async (req, res) => {
     return res.status(200).json({ message: "黑名單條目已成功刪除。" })
   } catch (error) {
     // 處理錯誤
-    return res.status(500).json({ error: error.message })
+    console.log({ error: error.message })
+    return res.status(500).json({ error: "發生未知錯誤" })
   }
 }
 
@@ -282,7 +291,8 @@ apisController.getSpinnerHistory = async (req, res) => {
     return res.status(200).json(spinnerHistory)
   } catch (error) {
     // 處理錯誤
-    return res.status(500).json({ error: error.message })
+    console.log({ error: error.message })
+    return res.status(500).json({ error: "發生未知錯誤" })
   }
 }
 
@@ -310,7 +320,8 @@ apisController.addSpinnerHistory = async (req, res) => {
     return res.status(201).json(newSpinnerHistory)
   } catch (error) {
     // 處理錯誤
-    return res.status(500).json({ error: error.message })
+    console.log({ error: error.message })
+    return res.status(500).json({ error: "發生未知錯誤" })
   }
 }
 
@@ -334,7 +345,8 @@ apisController.getCustomCategories = async (req, res) => {
     return res.status(200).json(customCategories)
   } catch (error) {
     // 處理錯誤
-    return res.status(500).json({ error: error.message })
+    console.log({ error: error.message })
+    return res.status(500).json({ error: "發生未知錯誤" })
   }
 }
 
@@ -362,7 +374,8 @@ apisController.addCustomCategory = async (req, res) => {
     return res.status(201).json(newCustomCategory)
   } catch (error) {
     // 處理錯誤
-    return res.status(500).json({ error: error.message })
+    console.log({ error: error.message })
+    return res.status(500).json({ error: "發生未知錯誤" })
   }
 }
 
