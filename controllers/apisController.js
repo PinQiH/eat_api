@@ -174,7 +174,30 @@ apisController.addCategory = async (req, res) => {
 
 // 獲取用戶黑名單
 apisController.getUserBlacklist = async (req, res) => {
-  // TODO: 實現獲取用戶黑名單邏輯
+  try {
+    // 從請求參數中獲取用戶ID
+    const userId = req.params.userId
+
+    // 在數據庫中查找用戶的黑名單
+    const userBlacklist = await models.Blacklist.findAll({
+      where: { userId },
+      include: [
+        {
+          model: models.FoodCategory,
+        },
+      ],
+    })
+
+    if (userBlacklist.length === 0) {
+      return res.status(404).json({ message: "未找到黑名單信息。" })
+    }
+
+    // 返回用戶黑名單
+    return res.status(200).json(userBlacklist)
+  } catch (error) {
+    // 處理錯誤
+    return res.status(500).json({ error: error.message })
+  }
 }
 
 // 添加食物到黑名單
