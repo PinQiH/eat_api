@@ -1,10 +1,46 @@
 const models = require("../models")
+const bcrypt = require("bcryptjs")
 
 const apisController = {}
 
 // 用戶註冊
 apisController.registerUser = async (req, res) => {
-  // TODO: 實現用戶註冊邏輯
+  try {
+    // 從請求體中獲取用戶資料
+    const { username, email, password } = req.body
+
+    // 驗證用戶資料
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: "缺少必要的用戶資訊。" })
+    }
+
+    // 檢查郵箱是否已被註冊
+    const existingUser = await models.User.findOne({ where: { email } })
+    if (existingUser) {
+      return res.status(400).json({ message: "郵箱已被註冊。" })
+    }
+
+    // 加密密碼
+    const hashedPassword = await bcrypt.hash(password, 10)
+
+    // 創建新用戶
+    const newUser = await models.User.create({
+      username,
+      email,
+      password: hashedPassword,
+    })
+
+    // 返回成功響應
+    return res.status(201).json({
+      userId: newUser.id,
+      username: newUser.username,
+      email: newUser.email,
+      message: "註冊成功。",
+    })
+  } catch (error) {
+    // 處理錯誤
+    return res.status(500).json({ error: error.message })
+  }
 }
 
 // 用戶登錄
