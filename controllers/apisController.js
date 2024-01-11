@@ -101,7 +101,37 @@ apisController.getUserInfo = async (req, res) => {
 
 // 更新用戶資訊
 apisController.updateUserInfo = async (req, res) => {
-  // TODO: 實現更新用戶資訊邏輯
+  try {
+    // 從請求參數中獲取用戶ID
+    const userId = req.params.userId
+
+    // 從請求體中獲取要更新的資料，包括密碼
+    const { username, email, password } = req.body
+
+    // 更新的對象
+    const updatedData = { username, email }
+
+    // 如果提供了新密碼，則加密並添加到更新對象中
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10)
+      updatedData.password = hashedPassword
+    }
+
+    // 在數據庫中找到並更新用戶
+    const [updated] = await models.User.update(updatedData, {
+      where: { userId: userId },
+    })
+
+    if (!updated) {
+      return res.status(404).json({ message: "用戶未找到。" })
+    }
+
+    // 返回成功響應
+    return res.status(200).json({ message: "用戶資訊已更新。" })
+  } catch (error) {
+    // 處理錯誤
+    return res.status(500).json({ error: error.message })
+  }
 }
 
 // 獲取所有食物類別
