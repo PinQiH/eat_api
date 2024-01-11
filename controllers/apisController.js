@@ -202,7 +202,30 @@ apisController.getUserBlacklist = async (req, res) => {
 
 // 添加食物到黑名單
 apisController.addToBlacklist = async (req, res) => {
-  // TODO: 實現添加食物到黑名單邏輯
+  try {
+    // 從請求參數中獲取用戶ID
+    const userId = req.params.userId
+
+    // 從請求體中獲取食物類別ID和用戶ID
+    const { categoryId } = req.body
+
+    // 驗證提供的信息
+    if (!userId || !categoryId) {
+      return res.status(400).json({ message: "需要用戶ID和食物類別ID。" })
+    }
+
+    // 在數據庫中創建黑名單條目
+    const newBlacklistEntry = await models.Blacklist.create({
+      userId,
+      categoryId,
+    })
+
+    // 返回成功響應
+    return res.status(201).json(newBlacklistEntry)
+  } catch (error) {
+    // 處理錯誤
+    return res.status(500).json({ error: error.message })
+  }
 }
 
 // 從黑名單中移除食物
