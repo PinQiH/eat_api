@@ -258,7 +258,32 @@ apisController.removeFromBlacklist = async (req, res) => {
 
 // 獲取用戶的轉盤歷史
 apisController.getSpinnerHistory = async (req, res) => {
-  // TODO: 實現獲取轉盤歷史邏輯
+  try {
+    // 從請求參數中獲取用戶ID
+    const userId = req.params.userId
+
+    // 在數據庫中查找用戶的轉盤歷史
+    const spinnerHistory = await models.SpinnerHistory.findAll({
+      where: { userId: userId },
+      // 可選：包含相關的食物類別等信息
+      include: [
+        {
+          model: models.FoodCategory,
+        },
+      ],
+    })
+
+    // 檢查是否找到轉盤歷史記錄
+    if (spinnerHistory.length === 0) {
+      return res.status(404).json({ message: "未找到轉盤歷史記錄。" })
+    }
+
+    // 返回用戶的轉盤歷史
+    return res.status(200).json(spinnerHistory)
+  } catch (error) {
+    // 處理錯誤
+    return res.status(500).json({ error: error.message })
+  }
 }
 
 // 添加轉盤歷史記錄
