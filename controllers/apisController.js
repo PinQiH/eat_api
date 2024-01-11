@@ -340,7 +340,30 @@ apisController.getCustomCategories = async (req, res) => {
 
 // 添加用戶自定義食物類別
 apisController.addCustomCategory = async (req, res) => {
-  // TODO: 實現添加用戶自定義食物類別邏輯
+  try {
+    // 從請求參數中獲取用戶ID
+    const userId = req.params.userId
+
+    // 從請求體中獲取用戶ID和類別名稱
+    const { categoryName } = req.body
+
+    // 驗證提供的信息
+    if (!userId || !categoryName) {
+      return res.status(400).json({ message: "需要用戶ID和類別名稱。" })
+    }
+
+    // 在數據庫中創建新的自定義食物類別
+    const newCustomCategory = await models.CustomFoodCategory.create({
+      userId,
+      categoryName,
+    })
+
+    // 返回成功響應
+    return res.status(201).json(newCustomCategory)
+  } catch (error) {
+    // 處理錯誤
+    return res.status(500).json({ error: error.message })
+  }
 }
 
 module.exports = apisController
