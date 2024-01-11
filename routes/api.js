@@ -33,5 +33,9 @@ router.post(
   "/users/:userId/custom-categories",
   apisController.addCustomCategory
 )
+router.delete(
+  "/users/:userId/custom-categories/:categoryId",
+  apisController.deleteCustomCategory
+)
 
 module.exports = router

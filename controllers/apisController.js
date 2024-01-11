@@ -379,4 +379,29 @@ apisController.addCustomCategory = async (req, res) => {
   }
 }
 
+// 刪除用戶自定義食物類別
+apisController.deleteCustomCategory = async (req, res) => {
+  try {
+    const { userId, categoryId } = req.params
+
+    // 在數據庫中刪除指定的自定義食物類別
+    const result = await models.CustomFoodCategory.destroy({
+      where: {
+        customCategoryId: categoryId,
+        userId: userId,
+      },
+    })
+
+    if (result === 0) {
+      return res.status(404).json({ message: "自定義類別未找到或已被刪除。" })
+    }
+
+    return res.status(200).json({ message: "自定義類別已成功刪除。" })
+  } catch (error) {
+    // 處理錯誤
+    console.log({ error: error.message })
+    return res.status(500).json({ error: "發生未知錯誤" })
+  }
+}
+
 module.exports = apisController
