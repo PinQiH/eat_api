@@ -288,7 +288,30 @@ apisController.getSpinnerHistory = async (req, res) => {
 
 // 添加轉盤歷史記錄
 apisController.addSpinnerHistory = async (req, res) => {
-  // TODO: 實現添加轉盤歷史邏輯
+  try {
+    // 從請求參數中獲取用戶ID
+    const userId = req.params.userId
+
+    // 從請求體中獲取用戶ID和選中的食物類別ID
+    const { categoryId } = req.body
+
+    // 驗證提供的信息
+    if (!userId || !categoryId) {
+      return res.status(400).json({ message: "需要用戶ID和選中的食物類別ID。" })
+    }
+
+    // 在數據庫中創建轉盤歷史記錄
+    const newSpinnerHistory = await models.SpinnerHistory.create({
+      userId,
+      categoryId,
+    })
+
+    // 返回成功響應
+    return res.status(201).json(newSpinnerHistory)
+  } catch (error) {
+    // 處理錯誤
+    return res.status(500).json({ error: error.message })
+  }
 }
 
 // 獲取用戶自定義食物類別
