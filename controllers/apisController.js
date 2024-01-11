@@ -316,7 +316,26 @@ apisController.addSpinnerHistory = async (req, res) => {
 
 // 獲取用戶自定義食物類別
 apisController.getCustomCategories = async (req, res) => {
-  // TODO: 實現獲取用戶自定義食物類別邏輯
+  try {
+    // 從請求參數中獲取用戶ID
+    const userId = req.params.userId
+
+    // 在數據庫中查找用戶的自定義食物類別
+    const customCategories = await models.CustomFoodCategory.findAll({
+      where: { userId: userId },
+    })
+
+    // 檢查是否找到自定義類別
+    if (customCategories.length === 0) {
+      return res.status(404).json({ message: "未找到自定義食物類別。" })
+    }
+
+    // 返回用戶的自定義食物類別
+    return res.status(200).json(customCategories)
+  } catch (error) {
+    // 處理錯誤
+    return res.status(500).json({ error: error.message })
+  }
 }
 
 // 添加用戶自定義食物類別
