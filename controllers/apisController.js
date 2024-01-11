@@ -230,7 +230,30 @@ apisController.addToBlacklist = async (req, res) => {
 
 // 從黑名單中移除食物
 apisController.removeFromBlacklist = async (req, res) => {
-  // TODO: 實現從黑名單移除食物邏輯
+  try {
+    // 從請求參數中獲取用戶ID和食物類別ID
+    const userId = req.params.userId
+    const categoryId = req.params.categoryId
+
+    // 在數據庫中找到並刪除對應的黑名單條目
+    const result = await models.Blacklist.destroy({
+      where: {
+        userId: userId,
+        categoryId: categoryId,
+      },
+    })
+
+    // 檢查是否有條目被刪除
+    if (result === 0) {
+      return res.status(404).json({ message: "黑名單條目未找到或已被刪除。" })
+    }
+
+    // 返回成功響應
+    return res.status(200).json({ message: "黑名單條目已成功刪除。" })
+  } catch (error) {
+    // 處理錯誤
+    return res.status(500).json({ error: error.message })
+  }
 }
 
 // 獲取用戶的轉盤歷史
