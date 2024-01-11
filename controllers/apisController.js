@@ -76,7 +76,27 @@ apisController.loginUser = async (req, res) => {
 
 // 獲取用戶資訊
 apisController.getUserInfo = async (req, res) => {
-  // TODO: 實現獲取用戶資訊邏輯
+  try {
+    // 從請求參數中獲取用戶ID
+    const userId = req.params.userId
+
+    // 在數據庫中查找用戶
+    const user = await models.User.findByPk(userId)
+    if (!user) {
+      return res.status(404).json({ message: "用戶未找到。" })
+    }
+
+    // 返回用戶資訊（去除敏感資訊，如密碼）
+    return res.status(200).json({
+      userId: user.userId,
+      username: user.username,
+      email: user.email,
+      // 其他需要返回的用戶資訊
+    })
+  } catch (error) {
+    // 處理錯誤
+    return res.status(500).json({ error: error.message })
+  }
 }
 
 // 更新用戶資訊
