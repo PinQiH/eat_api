@@ -364,6 +364,18 @@ apisController.addCustomCategory = async (req, res) => {
       return res.status(400).json({ message: "需要用戶ID和類別名稱。" })
     }
 
+    // 檢查是否已存在相同名稱的自定義類別
+    const existingCategory = await models.CustomFoodCategory.findOne({
+      where: {
+        userId: userId,
+        categoryName: categoryName,
+      },
+    })
+
+    if (existingCategory) {
+      return res.status(400).json({ message: "該類別名稱已存在。" })
+    }
+
     // 在數據庫中創建新的自定義食物類別
     const newCustomCategory = await models.CustomFoodCategory.create({
       userId,
