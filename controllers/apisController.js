@@ -45,7 +45,33 @@ apisController.registerUser = async (req, res) => {
 
 // 用戶登錄
 apisController.loginUser = async (req, res) => {
-  // TODO: 實現用戶登錄邏輯
+  try {
+    // 從請求體中獲取電子郵件和密碼
+    const { email, password } = req.body
+
+    // 驗證電子郵件和密碼是否提供
+    if (!email || !password) {
+      return res.status(400).json({ message: "請提供電子郵件和密碼。" })
+    }
+
+    // 在數據庫中查找用戶
+    const user = await models.User.findOne({ where: { email } })
+    if (!user) {
+      return res.status(401).json({ message: "無效的登錄憑證。" })
+    }
+
+    // 比較密碼
+    const isMatch = await bcrypt.compare(password, user.password)
+    if (!isMatch) {
+      return res.status(401).json({ message: "無效的登錄憑證。" })
+    }
+
+    // TODO: 生成令牌（如 JWT），這裡只是返回用戶信息作為示例
+    res.status(200).json({ message: "登錄成功", userId: user.userId })
+  } catch (error) {
+    // 處理錯誤
+    res.status(500).json({ error: error.message })
+  }
 }
 
 // 獲取用戶資訊
