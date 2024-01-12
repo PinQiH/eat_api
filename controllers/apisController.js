@@ -541,7 +541,31 @@ apisController.deleteCategoryList = async (req, res) => {
 
 // 為特定列表添加食物類別
 apisController.addCategoryToList = async (req, res) => {
-  // 實現邏輯...
+  try {
+    // 從請求參數中獲取列表ID
+    const listId = req.params.listId
+
+    // 從請求體中獲取食物類別ID
+    const { categoryId } = req.body
+
+    // 驗證提供的信息
+    if (!categoryId) {
+      return res.status(400).json({ message: "需要提供食物類別ID。" })
+    }
+
+    // 在數據庫中創建新的關聯記錄
+    const newRelation = await models.CategoryListRelation.create({
+      categoryListId: listId,
+      categoryId,
+    })
+
+    // 返回成功響應
+    return res.status(201).json(newRelation)
+  } catch (error) {
+    // 處理錯誤
+    console.error(error)
+    return res.status(500).json({ error: "發生未知錯誤" })
+  }
 }
 
 // 從列表中移除食物類別
