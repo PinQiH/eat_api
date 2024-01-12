@@ -598,7 +598,32 @@ apisController.removeCategoryFromList = async (req, res) => {
 
 // 獲取列表中的所有食物類別
 apisController.getListCategories = async (req, res) => {
-  // 實現邏輯...
+  try {
+    // 從請求參數中獲取列表ID
+    const listId = req.params.listId
+
+    // 在數據庫中查找與該列表相關的所有食物類別
+    const listCategories = await models.CategoryListRelation.findAll({
+      where: { categoryListId: listId },
+      include: [
+        {
+          model: models.FoodCategory,
+        },
+      ],
+    })
+
+    // 檢查是否找到食物類別
+    if (listCategories.length === 0) {
+      return res.status(404).json({ message: "未找到列表中的食物類別。" })
+    }
+
+    // 返回查詢到的食物類別
+    return res.status(200).json(listCategories)
+  } catch (error) {
+    // 處理錯誤
+    console.error(error)
+    return res.status(500).json({ error: "發生未知錯誤" })
+  }
 }
 
 module.exports = apisController
