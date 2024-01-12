@@ -38,4 +38,40 @@ router.delete(
   apisController.deleteCustomCategory
 )
 
+// 獲取用戶的食物類別列表
+router.get("/users/:userId/category-lists", apisController.getUserCategoryLists)
+
+// 創建新的食物類別列表
+router.post("/users/:userId/category-lists", apisController.createCategoryList)
+
+// 更新現有的食物類別列表
+router.put(
+  "/users/:userId/category-lists/:listId",
+  apisController.updateCategoryList
+)
+
+// 刪除食物類別列表
+router.delete(
+  "/users/:userId/category-lists/:listId",
+  apisController.deleteCategoryList
+)
+
+// 為特定列表添加食物類別
+router.post(
+  "/category-lists/:listId/categories",
+  apisController.addCategoryToList
+)
+
+// 從列表中移除食物類別
+router.delete(
+  "/category-lists/:listId/categories/:categoryId",
+  apisController.removeCategoryFromList
+)
+
+// 獲取列表中的所有食物類別
+router.get(
+  "/category-lists/:listId/categories",
+  apisController.getListCategories
+)
+
 module.exports = router

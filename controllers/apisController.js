@@ -416,4 +416,59 @@ apisController.deleteCustomCategory = async (req, res) => {
   }
 }
 
+// 獲取用戶的食物類別列表
+apisController.getUserCategoryLists = async (req, res) => {
+  try {
+    // 從請求參數中獲取用戶ID
+    const userId = req.params.userId
+
+    // 在數據庫中查找與該用戶相關的食物類別列表
+    const categoryLists = await models.CategoryList.findAll({
+      where: { userId: userId },
+    })
+
+    // 檢查是否找到列表
+    if (categoryLists.length === 0) {
+      return res.status(404).json({ message: "未找到食物類別列表。" })
+    }
+
+    // 返回查詢到的食物類別列表
+    return res.status(200).json(categoryLists)
+  } catch (error) {
+    // 處理錯誤
+    console.error(error)
+    return res.status(500).json({ error: "發生未知錯誤" })
+  }
+}
+
+// 創建新的食物類別列表
+apisController.createCategoryList = async (req, res) => {
+  // 實現邏輯...
+}
+
+// 更新現有的食物類別列表
+apisController.updateCategoryList = async (req, res) => {
+  // 實現邏輯...
+}
+
+// 刪除食物類別列表
+apisController.deleteCategoryList = async (req, res) => {
+  // 實現邏輯...
+}
+
+// 為特定列表添加食物類別
+apisController.addCategoryToList = async (req, res) => {
+  // 實現邏輯...
+}
+
+// 從列表中移除食物類別
+apisController.removeCategoryFromList = async (req, res) => {
+  // 實現邏輯...
+}
+
+// 獲取列表中的所有食物類別
+apisController.getListCategories = async (req, res) => {
+  // 實現邏輯...
+}
+
 module.exports = apisController
