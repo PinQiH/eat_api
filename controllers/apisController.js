@@ -484,7 +484,35 @@ apisController.createCategoryList = async (req, res) => {
 
 // 更新現有的食物類別列表
 apisController.updateCategoryList = async (req, res) => {
-  // 實現邏輯...
+  try {
+    // 從請求參數中獲取列表ID
+    const listId = req.params.listId
+
+    // 從請求體中獲取新的列表名稱
+    const { newListName } = req.body
+
+    // 驗證提供的信息
+    if (!newListName) {
+      return res.status(400).json({ message: "需要提供新的列表名稱。" })
+    }
+
+    // 在數據庫中更新列表
+    const updatedList = await models.CategoryList.update(
+      { listName: newListName },
+      { where: { categoryListId: listId } }
+    )
+
+    if (updatedList[0] === 0) {
+      return res.status(404).json({ message: "列表未找到或未修改。" })
+    }
+
+    // 返回成功響應
+    return res.status(200).json({ message: "列表已成功更新。" })
+  } catch (error) {
+    // 處理錯誤
+    console.error(error)
+    return res.status(500).json({ error: "發生未知錯誤" })
+  }
 }
 
 // 刪除食物類別列表
