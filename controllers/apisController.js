@@ -443,7 +443,43 @@ apisController.getUserCategoryLists = async (req, res) => {
 
 // 創建新的食物類別列表
 apisController.createCategoryList = async (req, res) => {
-  // 實現邏輯...
+  try {
+    // 從請求參數中獲取用戶ID
+    const userId = req.params.userId
+
+    // 從請求體中獲取列表名稱
+    const { listName } = req.body
+
+    // 驗證提供的信息
+    if (!userId || !listName) {
+      return res.status(400).json({ message: "需要用戶ID和列表名稱。" })
+    }
+
+    // 檢查是否已存在相同名稱的列表
+    const existingList = await models.CategoryList.findOne({
+      where: {
+        userId: userId,
+        listName: listName,
+      },
+    })
+
+    if (existingList) {
+      return res.status(400).json({ message: "已存在同名的列表。" })
+    }
+
+    // 在數據庫中創建新的食物類別列表
+    const newCategoryList = await models.CategoryList.create({
+      userId,
+      listName,
+    })
+
+    // 返回成功響應
+    return res.status(201).json(newCategoryList)
+  } catch (error) {
+    // 處理錯誤
+    console.error(error)
+    return res.status(500).json({ error: "發生未知錯誤" })
+  }
 }
 
 // 更新現有的食物類別列表
