@@ -517,7 +517,26 @@ apisController.updateCategoryList = async (req, res) => {
 
 // 刪除食物類別列表
 apisController.deleteCategoryList = async (req, res) => {
-  // 實現邏輯...
+  try {
+    // 從請求參數中獲取列表ID
+    const listId = req.params.listId
+
+    // 在數據庫中刪除列表
+    const result = await models.CategoryList.destroy({
+      where: { categoryListId: listId },
+    })
+
+    if (result === 0) {
+      return res.status(404).json({ message: "列表未找到或已被刪除。" })
+    }
+
+    // 返回成功響應
+    return res.status(200).json({ message: "列表已成功刪除。" })
+  } catch (error) {
+    // 處理錯誤
+    console.error(error)
+    return res.status(500).json({ error: "發生未知錯誤" })
+  }
 }
 
 // 為特定列表添加食物類別
