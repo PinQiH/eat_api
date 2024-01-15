@@ -159,7 +159,7 @@ apisController.getAllCategoriesWithCustomAndBlacklist = async (req, res) => {
       const customCategories = await models.CustomFoodCategory.findAll({
         where: { userId },
         attributes: [
-          "customCategoryId",
+          ["customCategoryId", "categoryId"],
           "categoryName",
           [Sequelize.literal("false"), "isBlacklisted"],
         ],
@@ -177,6 +177,7 @@ apisController.getAllCategoriesWithCustomAndBlacklist = async (req, res) => {
         return {
           ...category.get({ plain: true }),
           isBlacklisted: blacklistIds.includes(category.categoryId),
+          isCustom: category instanceof models.CustomFoodCategory,
         }
       })
     }
