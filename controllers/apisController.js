@@ -1,5 +1,6 @@
 const models = require("../models")
 const bcrypt = require("bcryptjs")
+const { Sequelize } = require("sequelize")
 
 const apisController = {}
 
@@ -148,6 +149,56 @@ apisController.getAllCategories = async (req, res) => {
   } catch (error) {
     // 處理錯誤
     console.log({ error: error.message })
+    return res.status(500).json({ error: "發生未知錯誤" })
+  }
+}
+
+// 獲取所有食物類別包含使用者新增及黑名單
+apisController.getAllCategoriesWithCustomAndBlacklist = async (req, res) => {
+  try {
+    const userId = req.query.userId // 假設用戶ID從查詢參數中獲取
+
+    // 從資料庫中查詢所有標準食物類別
+    let categories = await models.FoodCategory.findAll({
+      attributes: [
+        "categoryId",
+        "categoryName",
+        [Sequelize.literal("false"), "isBlacklisted"],
+      ],
+    })
+
+    // 若提供了用戶ID，則查詢用戶自定義的食物類別和黑名單
+    if (userId) {
+      // 獲取用戶自定義的食物類別
+      const customCategories = await models.CustomFoodCategory.findAll({
+        where: { userId },
+        attributes: [
+          "customCategoryId",
+          "categoryName",
+          [Sequelize.literal("false"), "isBlacklisted"],
+        ],
+      })
+
+      // 獲取用戶的黑名單
+      const blacklist = await models.Blacklist.findAll({
+        where: { userId },
+        attributes: ["categoryId"],
+      })
+      const blacklistIds = blacklist.map((entry) => entry.categoryId)
+
+      // 將自定義類別合併到結果中，並對黑名單中的類別進行標示
+      categories = categories.concat(customCategories).map((category) => {
+        return {
+          ...category.get({ plain: true }),
+          isBlacklisted: blacklistIds.includes(category.categoryId),
+        }
+      })
+    }
+
+    // 返回查詢結果
+    res.status(200).json(categories)
+  } catch (error) {
+    console.error(error)
     return res.status(500).json({ error: "發生未知錯誤" })
   }
 }

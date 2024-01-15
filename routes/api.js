@@ -11,6 +11,10 @@ router.put("/users/:userId", apisController.updateUserInfo)
 // 食物類別管理路由
 router.get("/categories", apisController.getAllCategories)
 router.post("/categories", apisController.addCategory)
+router.get(
+  "/categories/all",
+  apisController.getAllCategoriesWithCustomAndBlacklist
+)
 
 // 用戶黑名單管理路由
 router.get("/users/:userId/blacklist", apisController.getUserBlacklist)
