@@ -113,7 +113,7 @@ apisController.updateUserInfo = async (req, res) => {
     const { username, email, password } = req.body
 
     // 更新的對象
-    const updatedData = { username, email }
+    const updatedData = { username, email, password }
 
     // 如果提供了新密碼，則加密並添加到更新對象中
     if (password) {
@@ -132,20 +132,6 @@ apisController.updateUserInfo = async (req, res) => {
 
     // 返回成功響應
     return res.status(200).json({ message: "用戶資訊已更新。" })
-  } catch (error) {
-    // 處理錯誤
-    console.log({ error: error.message })
-    return res.status(500).json({ error: "發生未知錯誤" })
-  }
-}
-
-// 獲取所有食物類別
-apisController.getAllCategories = async (req, res) => {
-  try {
-    // 從資料庫中查詢所有食物類別
-    const categories = await models.FoodCategory.findAll()
-    // 返回查詢結果
-    res.status(200).json(categories)
   } catch (error) {
     // 處理錯誤
     console.log({ error: error.message })
@@ -199,32 +185,6 @@ apisController.getAllCategoriesWithCustomAndBlacklist = async (req, res) => {
     res.status(200).json(categories)
   } catch (error) {
     console.error(error)
-    return res.status(500).json({ error: "發生未知錯誤" })
-  }
-}
-
-// 添加新的食物類別
-apisController.addCategory = async (req, res) => {
-  try {
-    // 從請求體中獲取類別資訊
-    const { categoryName, isDefault } = req.body
-
-    // 驗證類別資訊（這裡只是一個基本的示例）
-    if (!categoryName) {
-      return res.status(400).json({ message: "類別名稱是必須的。" })
-    }
-
-    // 在數據庫中創建新的食物類別
-    const newCategory = await models.FoodCategory.create({
-      categoryName,
-      isDefault: isDefault || false, // 如果未提供，則默認為 false
-    })
-
-    // 返回成功響應
-    return res.status(201).json(newCategory)
-  } catch (error) {
-    // 處理錯誤
-    console.log({ error: error.message })
     return res.status(500).json({ error: "發生未知錯誤" })
   }
 }
@@ -325,12 +285,6 @@ apisController.getSpinnerHistory = async (req, res) => {
     // 在數據庫中查找用戶的轉盤歷史
     const spinnerHistory = await models.SpinnerHistory.findAll({
       where: { userId: userId },
-      // 可選：包含相關的食物類別等信息
-      include: [
-        {
-          model: models.FoodCategory,
-        },
-      ],
     })
 
     // 檢查是否找到轉盤歷史記錄
@@ -354,46 +308,23 @@ apisController.addSpinnerHistory = async (req, res) => {
     const userId = req.params.userId
 
     // 從請求體中獲取用戶ID和選中的食物類別ID
-    const { categoryId } = req.body
+    const { categoryName } = req.body
 
     // 驗證提供的信息
-    if (!userId || !categoryId) {
-      return res.status(400).json({ message: "需要用戶ID和選中的食物類別ID。" })
+    if (!userId || !categoryName) {
+      return res
+        .status(400)
+        .json({ message: "需要用戶ID和選中的食物類別名稱。" })
     }
 
     // 在數據庫中創建轉盤歷史記錄
     const newSpinnerHistory = await models.SpinnerHistory.create({
       userId,
-      categoryId,
+      categoryName,
     })
 
     // 返回成功響應
     return res.status(201).json(newSpinnerHistory)
-  } catch (error) {
-    // 處理錯誤
-    console.log({ error: error.message })
-    return res.status(500).json({ error: "發生未知錯誤" })
-  }
-}
-
-// 獲取用戶自定義食物類別
-apisController.getCustomCategories = async (req, res) => {
-  try {
-    // 從請求參數中獲取用戶ID
-    const userId = req.params.userId
-
-    // 在數據庫中查找用戶的自定義食物類別
-    const customCategories = await models.CustomFoodCategory.findAll({
-      where: { userId: userId },
-    })
-
-    // 檢查是否找到自定義類別
-    if (customCategories.length === 0) {
-      return res.status(404).json({ message: "未找到自定義食物類別。" })
-    }
-
-    // 返回用戶的自定義食物類別
-    return res.status(200).json(customCategories)
   } catch (error) {
     // 處理錯誤
     console.log({ error: error.message })
@@ -447,19 +378,58 @@ apisController.deleteCustomCategory = async (req, res) => {
   try {
     const { userId, categoryId } = req.params
 
-    // 在數據庫中刪除指定的自定義食物類別
-    const result = await models.CustomFoodCategory.destroy({
-      where: {
-        customCategoryId: categoryId,
-        userId: userId,
-      },
-    })
+    // 開啟事務
+    const transaction = await models.sequelize.transaction()
 
-    if (result === 0) {
-      return res.status(404).json({ message: "自定義類別未找到或已被刪除。" })
+    try {
+      // 首先刪除與該類別相關的黑名單記錄
+      await models.Blacklist.destroy(
+        {
+          where: {
+            categoryId: categoryId,
+            userId: userId,
+          },
+        },
+        { transaction }
+      )
+
+      // 刪除與該類別相關的列表關聯記錄
+      await models.CategoryListRelation.destroy(
+        {
+          where: {
+            categoryId: categoryId,
+          },
+        },
+        { transaction }
+      )
+
+      // 刪除自定義食物類別
+      const result = await models.CustomFoodCategory.destroy(
+        {
+          where: {
+            customCategoryId: categoryId,
+            userId: userId,
+          },
+        },
+        { transaction }
+      )
+
+      if (result === 0) {
+        await transaction.rollback()
+        return res.status(404).json({ message: "自定義類別未找到或已被刪除。" })
+      }
+
+      // 提交事務
+      await transaction.commit()
+
+      return res
+        .status(200)
+        .json({ message: "自定義類別及相關記錄已成功刪除。" })
+    } catch (error) {
+      // 如果過程中發生錯誤，回滾事務
+      await transaction.rollback()
+      throw error
     }
-
-    return res.status(200).json({ message: "自定義類別已成功刪除。" })
   } catch (error) {
     // 處理錯誤
     console.log({ error: error.message })
@@ -536,6 +506,9 @@ apisController.createCategoryList = async (req, res) => {
 // 更新現有的食物類別列表
 apisController.updateCategoryList = async (req, res) => {
   try {
+    // 從請求參數中獲取用戶ID
+    const userId = req.params.userId
+
     // 從請求參數中獲取列表ID
     const listId = req.params.listId
 
@@ -545,6 +518,18 @@ apisController.updateCategoryList = async (req, res) => {
     // 驗證提供的信息
     if (!newListName) {
       return res.status(400).json({ message: "需要提供新的列表名稱。" })
+    }
+
+    // 檢查是否已存在相同名稱的列表
+    const existingList = await models.CategoryList.findOne({
+      where: {
+        userId: userId,
+        listName: newListName,
+      },
+    })
+
+    if (existingList) {
+      return res.status(400).json({ message: "已存在同名的列表。" })
     }
 
     // 在數據庫中更新列表
@@ -602,6 +587,18 @@ apisController.addCategoryToList = async (req, res) => {
     // 驗證提供的信息
     if (!categoryId) {
       return res.status(400).json({ message: "需要提供食物類別ID。" })
+    }
+
+    // 檢查是否已存在相同的類別關聯
+    const existingRelation = await models.CategoryListRelation.findOne({
+      where: {
+        categoryListId: listId,
+        categoryId: categoryId,
+      },
+    })
+
+    if (existingRelation) {
+      return res.status(400).json({ message: "該列表中已存在此類別。" })
     }
 
     // 在數據庫中創建新的關聯記錄

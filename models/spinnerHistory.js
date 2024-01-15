@@ -6,9 +6,6 @@ module.exports = (sequelize, DataTypes) => {
   class SpinnerHistory extends Model {
     static associate(models) {
       SpinnerHistory.belongsTo(models.User, { foreignKey: "userId" })
-      SpinnerHistory.belongsTo(models.FoodCategory, {
-        foreignKey: "categoryId",
-      })
     }
   }
   SpinnerHistory.init(
@@ -22,8 +19,8 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         allowNull: false,
       },
-      categoryId: {
-        type: DataTypes.UUID,
+      categoryName: {
+        type: DataTypes.STRING,
         allowNull: false,
       },
       createdAt: DataTypes.DATE,

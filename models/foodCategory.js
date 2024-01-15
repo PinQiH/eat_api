@@ -5,9 +5,6 @@ const { v4: uuidv4 } = require("uuid")
 module.exports = (sequelize, DataTypes) => {
   class FoodCategory extends Model {
     static associate(models) {
-      FoodCategory.hasMany(models.SpinnerHistory, {
-        foreignKey: "categoryId",
-      })
       FoodCategory.hasMany(models.Blacklist, { foreignKey: "categoryId" })
       FoodCategory.hasMany(models.CategoryListRelation, {
         foreignKey: "categoryId",

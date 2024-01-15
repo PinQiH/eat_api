@@ -9,8 +9,6 @@ router.get("/users/:userId", apisController.getUserInfo)
 router.put("/users/:userId", apisController.updateUserInfo)
 
 // 食物類別管理路由
-router.get("/categories", apisController.getAllCategories)
-router.post("/categories", apisController.addCategory)
 router.get(
   "/categories/all",
   apisController.getAllCategoriesWithCustomAndBlacklist
@@ -29,10 +27,6 @@ router.get("/users/:userId/spinner-history", apisController.getSpinnerHistory)
 router.post("/users/:userId/spinner-history", apisController.addSpinnerHistory)
 
 // 用戶自定義食物類別路由
-router.get(
-  "/users/:userId/custom-categories",
-  apisController.getCustomCategories
-)
 router.post(
   "/users/:userId/custom-categories",
   apisController.addCustomCategory

@@ -16,13 +16,9 @@ module.exports = {
           key: "userId",
         },
       },
-      categoryId: {
-        type: Sequelize.UUID,
+      categoryName: {
+        type: Sequelize.STRING,
         allowNull: false,
-        references: {
-          model: "FoodCategories",
-          key: "categoryId",
-        },
       },
       createdAt: {
         allowNull: false,
