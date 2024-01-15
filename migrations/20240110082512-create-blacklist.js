@@ -19,10 +19,6 @@ module.exports = {
       categoryId: {
         type: Sequelize.UUID,
         allowNull: false,
-        references: {
-          model: "FoodCategories",
-          key: "categoryId",
-        },
       },
       createdAt: {
         allowNull: false,

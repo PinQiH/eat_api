@@ -144,6 +144,12 @@ apisController.getAllCategoriesWithCustomAndBlacklist = async (req, res) => {
   try {
     const userId = req.query.userId // 假設用戶ID從查詢參數中獲取
 
+    const page = parseInt(req.query.page) || 1 // 預設為第1頁
+    const pageSize = parseInt(req.query.pageSize) || 10 // 預設每頁10條記錄
+
+    // 計算查詢的offset
+    const offset = (page - 1) * pageSize
+
     // 從資料庫中查詢所有標準食物類別
     let categories = await models.FoodCategory.findAll({
       attributes: [
@@ -151,6 +157,8 @@ apisController.getAllCategoriesWithCustomAndBlacklist = async (req, res) => {
         "categoryName",
         [Sequelize.literal("false"), "isBlacklisted"],
       ],
+      limit: pageSize,
+      offset: offset,
     })
 
     // 若提供了用戶ID，則查詢用戶自定義的食物類別和黑名單
@@ -196,22 +204,40 @@ apisController.getUserBlacklist = async (req, res) => {
     // 從請求參數中獲取用戶ID
     const userId = req.params.userId
 
+    const page = parseInt(req.query.page) || 1 // 預設為第1頁
+    const pageSize = parseInt(req.query.pageSize) || 10 // 預設每頁10條記錄
+
+    // 計算查詢的offset
+    const offset = (page - 1) * pageSize
+
     // 在數據庫中查找用戶的黑名單
     const userBlacklist = await models.Blacklist.findAll({
       where: { userId },
-      include: [
-        {
-          model: models.FoodCategory,
-        },
-      ],
+      limit: pageSize,
+      offset: offset,
     })
 
     if (userBlacklist.length === 0) {
-      return res.status(404).json({ message: "未找到黑名單信息。" })
+      return res.status(200).json({ message: "未找到黑名單信息。" })
     }
 
-    // 返回用戶黑名單
-    return res.status(200).json(userBlacklist)
+    // 並行查找食物類別和自定義食物類別
+    const categoryIds = userBlacklist.map((item) => item.categoryId)
+    const [standardCategories, customCategories] = await Promise.all([
+      models.FoodCategory.findAll({
+        where: { categoryId: categoryIds },
+      }),
+      models.CustomFoodCategory.findAll({
+        where: { customCategoryId: categoryIds, userId: userId },
+      }),
+    ])
+
+    // 合併結果並返回
+    const combinedResults = [...standardCategories, ...customCategories].map(
+      (category) => category.get({ plain: true })
+    )
+
+    return res.status(200).json(combinedResults)
   } catch (error) {
     // 處理錯誤
     console.log({ error: error.message })
@@ -231,6 +257,13 @@ apisController.addToBlacklist = async (req, res) => {
     // 驗證提供的信息
     if (!userId || !categoryId) {
       return res.status(400).json({ message: "需要用戶ID和食物類別ID。" })
+    }
+
+    const existingEntry = await models.Blacklist.findOne({
+      where: { userId, categoryId },
+    })
+    if (existingEntry) {
+      return res.status(400).json({ message: "該類別已在黑名單中。" })
     }
 
     // 在數據庫中創建黑名單條目
@@ -283,14 +316,22 @@ apisController.getSpinnerHistory = async (req, res) => {
     // 從請求參數中獲取用戶ID
     const userId = req.params.userId
 
+    const page = parseInt(req.query.page) || 1 // 預設為第1頁
+    const pageSize = parseInt(req.query.pageSize) || 10 // 預設每頁10條記錄
+
+    // 計算查詢的offset
+    const offset = (page - 1) * pageSize
+
     // 在數據庫中查找用戶的轉盤歷史
     const spinnerHistory = await models.SpinnerHistory.findAll({
       where: { userId: userId },
+      limit: pageSize,
+      offset: offset,
     })
 
     // 檢查是否找到轉盤歷史記錄
     if (spinnerHistory.length === 0) {
-      return res.status(404).json({ message: "未找到轉盤歷史記錄。" })
+      return res.status(200).json({ message: "未找到轉盤歷史記錄。" })
     }
 
     // 返回用戶的轉盤歷史
@@ -444,9 +485,17 @@ apisController.getUserCategoryLists = async (req, res) => {
     // 從請求參數中獲取用戶ID
     const userId = req.params.userId
 
+    const page = parseInt(req.query.page) || 1 // 預設為第1頁
+    const pageSize = parseInt(req.query.pageSize) || 10 // 預設每頁10條記錄
+
+    // 計算查詢的offset
+    const offset = (page - 1) * pageSize
+
     // 在數據庫中查找與該用戶相關的食物類別列表
     const categoryLists = await models.CategoryList.findAll({
       where: { userId: userId },
+      limit: pageSize,
+      offset: offset,
     })
 
     // 檢查是否找到列表
@@ -651,14 +700,12 @@ apisController.getListCategories = async (req, res) => {
     // 從請求參數中獲取列表ID
     const listId = req.params.listId
 
+    // 從請求參數中獲取使用者ID
+    const userId = req.params.userId
+
     // 在數據庫中查找與該列表相關的所有食物類別
     const listCategories = await models.CategoryListRelation.findAll({
       where: { categoryListId: listId },
-      include: [
-        {
-          model: models.FoodCategory,
-        },
-      ],
     })
 
     // 檢查是否找到食物類別
@@ -666,8 +713,23 @@ apisController.getListCategories = async (req, res) => {
       return res.status(404).json({ message: "未找到列表中的食物類別。" })
     }
 
-    // 返回查詢到的食物類別
-    return res.status(200).json(listCategories)
+    // 並行查找食物類別和自定義食物類別
+    const categoryIds = listCategories.map((item) => item.categoryId)
+    const [standardCategories, customCategories] = await Promise.all([
+      models.FoodCategory.findAll({
+        where: { categoryId: categoryIds },
+      }),
+      models.CustomFoodCategory.findAll({
+        where: { customCategoryId: categoryIds, userId: userId },
+      }),
+    ])
+
+    // 合併結果並返回
+    const combinedResults = [...standardCategories, ...customCategories].map(
+      (category) => category.get({ plain: true })
+    )
+
+    return res.status(200).json(combinedResults)
   } catch (error) {
     // 處理錯誤
     console.error(error)

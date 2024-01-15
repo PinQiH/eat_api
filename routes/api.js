@@ -68,7 +68,7 @@ router.delete(
 
 // 獲取列表中的所有食物類別
 router.get(
-  "/category-lists/:listId/categories",
+  "/:userId/category-lists/:listId/categories",
   apisController.getListCategories
 )
 

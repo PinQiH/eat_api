@@ -9,10 +9,6 @@ module.exports = (sequelize, DataTypes) => {
       CategoryListRelation.belongsTo(models.CategoryList, {
         foreignKey: "categoryListId",
       })
-      // 關聯到食物類別表
-      CategoryListRelation.belongsTo(models.FoodCategory, {
-        foreignKey: "categoryId",
-      })
     }
   }
   CategoryListRelation.init(

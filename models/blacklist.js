@@ -6,7 +6,6 @@ module.exports = (sequelize, DataTypes) => {
   class Blacklist extends Model {
     static associate(models) {
       Blacklist.belongsTo(models.User, { foreignKey: "userId" })
-      Blacklist.belongsTo(models.FoodCategory, { foreignKey: "categoryId" })
     }
   }
   Blacklist.init(
