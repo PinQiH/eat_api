@@ -607,17 +607,40 @@ apisController.deleteCategoryList = async (req, res) => {
     // 從請求參數中獲取列表ID
     const listId = req.params.listId
 
-    // 在數據庫中刪除列表
-    const result = await models.CategoryList.destroy({
-      where: { categoryListId: listId },
-    })
+    // 從請求參數中獲取用戶ID
+    const userId = req.params.userId
 
-    if (result === 0) {
-      return res.status(404).json({ message: "列表未找到或已被刪除。" })
+    // 開啟事務
+    const transaction = await models.sequelize.transaction()
+
+    try {
+      // 首先刪除與該列表相關的列表關聯記錄
+      await models.CategoryListRelation.destroy(
+        { where: { categoryListId: listId } },
+        { transaction }
+      )
+      // 然後刪除列表本身
+      const result = await models.CategoryList.destroy({
+        where: {
+          categoryListId: listId,
+          userId: userId,
+        },
+        transaction: transaction,
+      })
+
+      if (result === 0) {
+        await transaction.rollback()
+        return res.status(404).json({ message: "列表未找到或已被刪除。" })
+      }
+
+      // 提交事務
+      await transaction.commit()
+      return res.status(200).json({ message: "列表已成功刪除。" })
+    } catch (error) {
+      // 如果過程中發生錯誤，回滾事務
+      await transaction.rollback()
+      throw error
     }
-
-    // 返回成功響應
-    return res.status(200).json({ message: "列表已成功刪除。" })
   } catch (error) {
     // 處理錯誤
     console.error(error)
@@ -710,7 +733,7 @@ apisController.getListCategories = async (req, res) => {
 
     // 檢查是否找到食物類別
     if (listCategories.length === 0) {
-      return res.status(404).json({ message: "未找到列表中的食物類別。" })
+      return res.status(200).json({ message: "未找到列表中的食物類別。" })
     }
 
     // 並行查找食物類別和自定義食物類別
