@@ -8,6 +8,10 @@ router.post("/users/login", apisController.loginUser)
 router.get("/users/:userId", apisController.getUserInfo)
 router.put("/users/:userId", apisController.updateUserInfo)
 
+// 忘記密碼
+router.post("/users/forgotPassword", apisController.forgotPassword)
+router.get("/users/resetPassword/:token", apisController.resetPassword)
+
 // 食物類別管理路由
 router.get(
   "/categories/all",

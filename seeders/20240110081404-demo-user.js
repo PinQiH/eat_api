@@ -10,7 +10,7 @@ module.exports = {
         {
           userId: uuidv4(),
           username: "示例用戶",
-          email: "example@example.com",
+          email: "cassie34131@gmail.com",
           password: "12345",
           createdAt: new Date(),
           updatedAt: new Date(),

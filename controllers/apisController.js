@@ -1,6 +1,12 @@
 const models = require("../models")
 const bcrypt = require("bcryptjs")
-const { Sequelize } = require("sequelize")
+const moment = require("moment-timezone")
+const { Sequelize, Op } = require("sequelize")
+const {
+  generateResetToken,
+  saveResetTokenToDatabase,
+} = require("../utils/tokenGenerator")
+const { sendResetPasswordEmail } = require("../utils/emailService")
 
 const apisController = {}
 
@@ -135,6 +141,77 @@ apisController.updateUserInfo = async (req, res) => {
   } catch (error) {
     // 處理錯誤
     console.log({ error: error.message })
+    return res.status(500).json({ error: "發生未知錯誤" })
+  }
+}
+
+// 忘記密碼
+apisController.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body
+    if (!email) {
+      return res.status(400).json({ message: "請提供郵箱地址。" })
+    }
+
+    const user = await models.User.findOne({ where: { email } })
+    if (!user) {
+      // 為了避免洩露郵箱信息，即使郵箱不存在也返回成功響應
+      return res.status(200).json({
+        message:
+          "如果該郵箱存在於我們的系統中，我們將發送一個重置密碼的鏈接到該郵箱。",
+      })
+    }
+
+    // 生成重置密碼令牌
+    const resetToken = generateResetToken()
+    const resetUrl = `${req.protocol}://${req.get(
+      "host"
+    )}/api/users/resetPassword/${resetToken}`
+
+    // 儲存令牌到數據庫 (考慮加密令牌並設置有效期)
+    await saveResetTokenToDatabase(user.userId, resetToken)
+
+    // 發送重置密碼郵件
+    await sendResetPasswordEmail(email, resetUrl)
+
+    return res.status(200).json({ message: "重置密碼鏈接已發送到您的郵箱。" })
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({ error: "無法處理忘記密碼請求。" })
+  }
+}
+
+// 重設密碼
+apisController.resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params
+
+    // 在數據庫中查找相對應的用戶
+    const user = await models.User.findOne({
+      where: {
+        resetPasswordToken: token,
+        resetPasswordExpires: {
+          // 確保令牌沒有過期
+          [Op.gt]: Date.now(),
+        },
+      },
+      attributes: ["userId", "resetPasswordExpires"],
+    })
+
+    if (!user) {
+      // 令牌無效或已過期
+      return res.status(400).json({
+        message: "驗證連結過期",
+      })
+    }
+
+    // 令牌驗證通過，顯示重置密碼的表單
+    return res.status(200).json({
+      message: "驗證成功，即將跳轉至重設密碼頁面",
+      userId: user.userId,
+    })
+  } catch (error) {
+    console.error(error)
     return res.status(500).json({ error: "發生未知錯誤" })
   }
 }
