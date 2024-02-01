@@ -157,24 +157,20 @@ apisController.forgotPassword = async (req, res) => {
     if (!user) {
       // 為了避免洩露郵箱信息，即使郵箱不存在也返回成功響應
       return res.status(200).json({
-        message:
-          "如果該郵箱存在於我們的系統中，我們將發送一個重置密碼的鏈接到該郵箱。",
+        message: "如果該郵箱存在於我們的系統中，我們將發送一個驗證碼到該郵箱。",
       })
     }
 
     // 生成重置密碼令牌
     const resetToken = generateResetToken()
-    const resetUrl = `${req.protocol}://${req.get(
-      "host"
-    )}/api/users/resetPassword/${resetToken}`
 
     // 儲存令牌到數據庫 (考慮加密令牌並設置有效期)
     await saveResetTokenToDatabase(user.userId, resetToken)
 
     // 發送重置密碼郵件
-    await sendResetPasswordEmail(email, resetUrl)
+    await sendResetPasswordEmail(email, resetToken)
 
-    return res.status(200).json({ message: "重置密碼鏈接已發送到您的郵箱。" })
+    return res.status(200).json({ message: "驗證碼已發送到您的郵箱。" })
   } catch (error) {
     console.error(error)
     return res.status(500).json({ error: "無法處理忘記密碼請求。" })
