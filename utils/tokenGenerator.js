@@ -4,7 +4,7 @@ const models = require("../models")
 
 // 生成一個唯一的重置密碼令牌
 function generateResetToken() {
-  return crypto.randomBytes(20).toString("hex")
+  return crypto.randomBytes(5).toString("hex") //預設長度為20
 }
 
 // 將生成的令牌和其有效期儲存到數據庫中
