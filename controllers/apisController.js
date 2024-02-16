@@ -793,41 +793,44 @@ apisController.removeCategoryFromList = async (req, res) => {
 // 獲取列表中的所有食物類別
 apisController.getListCategories = async (req, res) => {
   try {
-    // 從請求參數中獲取列表ID
     const listId = req.params.listId
-
-    // 從請求參數中獲取使用者ID
     const userId = req.params.userId
 
-    // 在數據庫中查找與該列表相關的所有食物類別
-    const listCategories = await models.CategoryListRelation.findAll({
+    // 先查找與該列表相關的所有類別ID
+    const relations = await models.CategoryListRelation.findAll({
       where: { categoryListId: listId },
+      attributes: ["categoryId"],
     })
+    const categoryIds = relations.map((relation) => relation.categoryId)
 
-    // 檢查是否找到食物類別
-    if (listCategories.length === 0) {
-      return res.status(200).json({ message: "未找到列表中的食物類別。" })
-    }
+    // 查找黑名單中的類別ID
+    const blacklisted = await models.Blacklist.findAll({
+      where: { userId },
+      attributes: ["categoryId"],
+    })
+    const blacklistedIds = blacklisted.map((item) => item.categoryId)
 
-    // 並行查找食物類別和自定義食物類別
-    const categoryIds = listCategories.map((item) => item.categoryId)
-    const [standardCategories, customCategories] = await Promise.all([
+    // 查找所有類別（標準+自定義）並標記黑名單和自定義
+    const categories = await Promise.all([
       models.FoodCategory.findAll({
         where: { categoryId: categoryIds },
+        attributes: ["categoryId", "categoryName"],
       }),
       models.CustomFoodCategory.findAll({
-        where: { customCategoryId: categoryIds, userId: userId },
+        where: { customCategoryId: categoryIds, userId },
+        attributes: [["customCategoryId", "categoryId"], "categoryName"],
       }),
     ])
 
-    // 合併結果並返回
-    const combinedResults = [...standardCategories, ...customCategories].map(
-      (category) => category.get({ plain: true })
-    )
+    // 合併並處理類別
+    const combinedCategories = categories.flat().map((category) => ({
+      ...category.get({ plain: true }),
+      isBlacklisted: blacklistedIds.includes(category.categoryId),
+      isCustom: category instanceof models.CustomFoodCategory, // 直接根據實例類型判斷是否為自定義
+    }))
 
-    return res.status(200).json(combinedResults)
+    return res.status(200).json(combinedCategories)
   } catch (error) {
-    // 處理錯誤
     console.error(error)
     return res.status(500).json({ error: "發生未知錯誤" })
   }
