@@ -674,6 +674,42 @@ apisController.updateCategoryList = async (req, res) => {
   }
 }
 
+// 查詢出屬於這個用戶且包含該食物類別的所有列表
+apisController.getListsByCategoryForUser = async (req, res) => {
+  try {
+    const { userId, categoryId } = req.params
+
+    // 步驟 2: 查詢出所有相關的 categoryListId
+    const relations = await models.CategoryListRelation.findAll({
+      where: { categoryId },
+      attributes: ["categoryListId"], // 只需要 categoryListId
+    })
+
+    // 提取所有的 categoryListId
+    const categoryListIds = relations.map((relation) => relation.categoryListId)
+
+    // 步驟 3: 根據 categoryListId 和 userId 查詢出所有相關的列表
+    if (categoryListIds.length > 0) {
+      const lists = await models.CategoryList.findAll({
+        where: {
+          categoryListId: categoryListIds,
+          userId, // 確保列表屬於該用戶
+        },
+        attributes: ["categoryListId", "listName"], // 只需要列出 listName 和 categoryListId
+      })
+
+      // 返回查詢結果
+      return res.status(200).json(lists)
+    } else {
+      // 如果沒有找到相關的 categoryListId，返回空數組
+      return res.status(404).json({ message: "未找到相關的列表。" })
+    }
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({ error: "查詢過程中發生錯誤。" })
+  }
+}
+
 // 刪除食物類別列表
 apisController.deleteCategoryList = async (req, res) => {
   try {

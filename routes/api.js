@@ -35,6 +35,7 @@ router.post(
   "/users/:userId/custom-categories",
   apisController.addCustomCategory
 )
+
 router.delete(
   "/users/:userId/custom-categories/:categoryId",
   apisController.deleteCustomCategory
@@ -50,6 +51,12 @@ router.post("/users/:userId/category-lists", apisController.createCategoryList)
 router.put(
   "/users/:userId/category-lists/:listId",
   apisController.updateCategoryList
+)
+
+// 查詢出屬於這個用戶且包含該食物類別的所有列表
+router.get(
+  "/users/:userId/categories/:categoryId/lists",
+  apisController.getListsByCategoryForUser
 )
 
 // 刪除食物類別列表
